@@ -1,0 +1,100 @@
+2️⃣ Google Maps APIキーを作る
+手順
+
+Google Cloud Console
+ にログイン
+
+プロジェクト作成（例：MapApp）
+
+APIを有効化
+
+Maps JavaScript API
+
+Directions API
+
+認証情報 → APIキーを作成
+
+セキュリティ設定（HTTPリファラ制限）
+
+開発中は http://localhost/* を追加
+
+
+3️⃣ HTMLファイルを作る
+必要なファイル
+
+index.html
+
+地図表示の基本コード
+
+YOUR_API_KEY → 作成した自分のキーに置き換える
+
+目標
+
+地図が表示されること（東京駅付近でOK）
+
+
+
+4️⃣ 入力フォームを作る
+
+出発地 <input id="start">
+
+目的地 <input id="goal">
+
+検索ボタン <button id="searchBtn">
+
+まずは見た目だけ、ボタン押して動かなくてOK
+
+
+5️⃣JavaScriptでボタンに反応させる
+ボタン押下イベントを作る
+画面入力を取得できるか確認
+ここでルート検索はまだ不要
+
+6️⃣ルート検索機能を追加（核心）
+DirectionsService を使う
+これで「地図 + 出発地・目的地 + ルート表示」が完成
+
+
+7️⃣追加便利機能（任意）
+
+移動手段の切替（DRIVING / WALKING / BICYCLING / TRANSIT）
+
+距離・時間の表示
+
+現在地取得（スマホで使う場合）
+
+エラー処理（住所が空の場合など）
+
+
+8️⃣無料公開（任意）
+
+GitHub Pages / Netlify / Cloudflare Pages など
+
+フォルダ内のHTML/CSS/JSをアップロードするだけで公開可能
+
+公開時は APIキー制限を必ず設定
+
+
+ポイントまとめ
+
+HTML → 画面
+
+CSS → 見た目
+
+JavaScript → 地図を動かす・ルート検索・ボタン操作
+
+Google Maps API → 地図データ・ルート計算の外部サービス
+
+おすすめ順
+
+STEP 2：地図表示（成功体験）
+
+STEP 4：フォーム作成
+
+STEP 5：ボタン操作で入力取得
+
+STEP 6：ルート検索機能追加
+
+STEP 7：便利機能（余裕があれば）
+
+STEP 8：公開（希望者のみ）
