@@ -1,40 +1,39 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>R3A304</title>
+  <meta charset="UTF-8" />
+  <title>Tokyo Map</title>
 
-  <!-- Leaflet の CSS -->
+  <!-- Leaflet CSS -->
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   />
 
   <style>
-    body {
+    /* 画面全体にマップを表示 */
+    html, body {
       margin: 0;
+      padding: 0;
+      height: 100%;
     }
+
     #map {
-      height: 100vh;
-      width: 100vw;
+      width: 100%;
+      height: 100%;
     }
   </style>
 </head>
 <body>
 
+  <!-- マップ表示領域 -->
   <div id="map"></div>
 
-  <!-- Leaflet の JS -->
+  <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <script>
-    // 新宿駅付近
-    const map = L.map('map').setView([35.6896, 139.7006], 14);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
-  </script>
+  <!-- 自作スクリプト -->
+  <script src="js/map.js"></script>
 
 </body>
 </html>
