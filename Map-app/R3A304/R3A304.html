@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <title>Tokyo Map</title>
+  <meta charset="UTF-8">
+  <title>Tokyo Oedo Line Map</title>
 
   <!-- Leaflet CSS -->
   <link
@@ -10,30 +10,17 @@
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   />
 
-  <style>
-    /* 画面全体にマップを表示 */
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-    }
-
-    #map {
-      width: 100%;
-      height: 100%;
-    }
-  </style>
+  <!-- 自作CSS -->
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-
-  <!-- マップ表示領域 -->
+  <!-- マップ領域 -->
   <div id="map"></div>
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- 自作スクリプト -->
+  <!-- 自作JS -->
   <script src="js/map.js"></script>
-
 </body>
 </html>

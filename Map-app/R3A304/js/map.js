@@ -1,71 +1,36 @@
-/****************************
- * 基本設定
- ****************************/
-const ODPT_TOKEN = "a3i8zmtw07t7cookjmmy02eup222b6ytjsvcnnhz3h4zbpje2t7p8190k1t2865l";
+// 地図表示
+const map = L.map('map').setView([35.681236, 139.767125], 11);
 
-// 東京都中心
-const map = L.map("map").setView([35.68, 139.76], 10);
+L.tileLayer(
+  'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  { attribution: '© OpenStreetMap contributors' }
+).addTo(map);
 
-// 背景地図
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  attribution: "&copy; OpenStreetMap contributors",
-}).addTo(map);
+// ====== ここから駅API ======
+const API_URL =
+  'https://api-challenge.odpt.org/api/v4/odpt:Station' +
+  '?odpt:operator=odpt.Operator:JR-East' +
+  '&acl:consumerKey=521wabbzz3hjrfr9ctx1cz7oin50dq76pvabxsrseydzpoo4vx8sr5pvdkdvw7k8'; // ←自分のトークン
 
-/****************************
- * API URL
- ****************************/
-const RAILWAY_API =
-  "https://api-public.odpt.org/api/v4/odpt:Railway" +
-  "?odpt:operator=odpt.Operator:Toei" +
-  "&owl:sameAs=odpt.Railway:Toei.Oedo" +
-  `&acl:consumerKey=${ODPT_TOKEN}`;
+fetch(API_URL)
+  .then(res => res.json())
+  .then(stations => {
+    stations.forEach(station => {
+      // 緯度・経度（ODPTの形式）
+      const lat = station['geo:lat'];
+      const lng = station['geo:long'];
 
-const STATION_API =
-  "https://api-public.odpt.org/api/v4/odpt:Station" +
-  "?odpt:operator=odpt.Operator:Toei" +
-  `&acl:consumerKey=${ODPT_TOKEN}`;
+      // 駅名（日本語）
+      const name = station['odpt:stationTitle']?.ja;
 
-/****************************
- * メイン処理
- ****************************/
-async function drawOedoLine() {
-  try {
-    const railwayRes = await fetch(RAILWAY_API);
-    const railwayData = await railwayRes.json();
-    console.log("railwayData", railwayData);
+      // 念のためチェック
+      if (!lat || !lng || !name) return;
 
-    if (!railwayData.length) {
-      console.error("Railway data is empty");
-      return;
-    }
-
-    const stationOrder = railwayData[0]["odpt:stationOrder"];
-
-    const stationRes = await fetch(STATION_API);
-    const stations = await stationRes.json();
-    console.log("stations", stations);
-
-    const stationMap = {};
-    stations.forEach((s) => {
-      if (s["geo:lat"] && s["geo:long"]) {
-        stationMap[s["owl:sameAs"]] = [s["geo:lat"], s["geo:long"]];
-      }
+      L.marker([lat, lng])
+        .addTo(map)
+        .bindPopup(name);
     });
-
-    const lineCoords = [];
-    stationOrder.forEach((st) => {
-      const coord = stationMap[st["odpt:station"]];
-      if (coord) lineCoords.push(coord);
-    });
-
-    if (lineCoords.length === 0) console.warn("lineCoords is empty");
-
-    L.polyline(lineCoords, { color: "#CF3366", weight: 4 }).addTo(map);
-  } catch (e) {
-    console.error("ODPT API error", e);
-  }
-}
-
-
-// 実行
-drawOedoLine();
+  })
+  .catch(err => {
+    console.error('駅データ取得エラー', err);
+  });
