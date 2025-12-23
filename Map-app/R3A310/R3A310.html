@@ -17,6 +17,31 @@
   </style>
 </head>
 <body>
+<script> // ★  JSON データ（必要に応じて全部貼ってOK） 
+const stations = [
+   { "dc:title": "白山", "geo:lat": 35.721682, "geo:long": 139.752134 },
+    { "dc:title": "西高島平", "geo:lat": 35.791965, "geo:long": 139.645421 },
+     { "dc:title": "本所吾妻橋", "geo:lat": 35.708565, "geo:long": 139.804397 } 
+     // …以下 JSON の残りを全部入れる
+      ]; 
+      function initMap() 
+      { 
+        const map = new google.maps.Map(document.getElementById("map"), 
+        { 
+          center: {
+              lat: 35.681236, lng: 139.767125 }, // 東京中心 
+             zoom: 13, }); 
+             stations.forEach(
+              st => { new google.maps.Marker(
+                { position: 
+                  { lat: st["geo:lat"], lng: st["geo:long"] }, map, title: st["dc:title"] 
+                }); 
+            }
+          ); 
+      } 
+
+</script>
+
   <iframe
     src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d414291.0211653881!2d139.445!3d35.673!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188b8575bd1fbf%3A0x2b6a6cb9b0a7441a!2z5p2x5Lqs6YO95riv5Yy66KGX77yR5LiB55uu77yR77yU!5e0!3m2!1sja!2sjp!4v1700000000000"
     allowfullscreen=""
