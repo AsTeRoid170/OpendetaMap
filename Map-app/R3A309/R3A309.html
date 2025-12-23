@@ -3,33 +3,82 @@
 <head>
 <meta charset="UTF-8">
 <title>GSI Tiles on Leaflet</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+
+<link rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
   integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
   crossorigin=""/>
-<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+
+<script
+  src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
   integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
-  crossorigin=""></script>
+  crossorigin="">
+</script>
 
 <style>
-  body {padding: 0; margin: 0}
-  html, body, #map {height: 90%; width: 100%;}
+  body { padding: 0; margin: 0; }
+  html, body, #map { height: 90%; width: 100%; }
 </style>
 </head>
 
 <body>
-    <p1>地図 表示</p1>
-<div id="map">
+
+<p>地図 表示</p>
+
+<div id="map"></div>
+
 <script>
+/* ===== 地図の初期化 ===== */
 var map = L.map('map');
 
-L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
-  attribution: "<a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>地理院タイル</a>"
-}).addTo(map);
+L.tileLayer(
+  'https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png',
+  {
+    attribution:
+      "<a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>地理院タイル</a>"
+  }
+).addTo(map);
 
+// 東京中心
 map.setView([35.681236, 139.767125], 13);
-</script>
-</div>
-<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">地理院タイル</a>
-</body>
 
+/* ===== JR東日本 駅情報 API ===== */
+const API_KEY = "0xq6l301kpk4mqpr77qw1q054dhc2g79siahknmkwo4rnke81xnfgz1853jxpp42";
+
+const url =
+  "https://api.odpt.org/api/v4/odpt:Station" +
+  "?odpt:operator=odpt.Operator:JR-East" +
+  "&acl:consumerKey=" + API_KEY;
+
+fetch(url)
+  .then(res => res.json())
+  .then(data => {
+
+    data.forEach(st => {
+      const lat  = st["geo:lat"];
+      const lng  = st["geo:long"];
+      const name = st["dc:title"];
+
+      // 駅を目立たせる
+      L.circleMarker([lat, lng], {
+        radius: 6,
+        color: "red",
+        fillColor: "red",
+        fillOpacity: 0.8
+      })
+      .addTo(map)
+      .bindPopup(name);
+    });
+
+  })
+  .catch(err => {
+    console.error("駅データ取得エラー:", err);
+  });
+</script>
+
+<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">
+地理院タイル
+</a>
+
+</body>
 </html>
