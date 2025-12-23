@@ -28,38 +28,29 @@
 <div id="map"></div>
 
 <script>
-/* ===== 地図の初期化 ===== */
-var map = L.map('map');
+/* ===== 地図 ===== */
+var map = L.map('map').setView([35.681236, 139.767125], 13);
 
 L.tileLayer(
   'https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png',
-  {
-    attribution:
-      "<a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>地理院タイル</a>"
-  }
+  { attribution: '地理院タイル' }
 ).addTo(map);
 
-// 東京中心
-map.setView([35.681236, 139.767125], 13);
-
-/* ===== JR東日本 駅情報 API ===== */
-const API_KEY = "0xq6l301kpk4mqpr77qw1q054dhc2g79siahknmkwo4rnke81xnfgz1853jxpp42";
-
-const url =
-  "https://api.odpt.org/api/v4/odpt:Station" +
-  "?odpt:operator=odpt.Operator:JR-East" +
-  "&acl:consumerKey=" + API_KEY;
-
-fetch(url)
+/* ===== JSONファイルから駅データを読み込む ===== */
+fetch("odpt_Station.json")
   .then(res => res.json())
   .then(data => {
+
+    console.log("駅データ件数:", data.length);
+    console.log("最初の1件:", data[0]);
 
     data.forEach(st => {
       const lat  = st["geo:lat"];
       const lng  = st["geo:long"];
       const name = st["dc:title"];
 
-      // 駅を目立たせる
+      if (!lat || !lng) return;
+
       L.circleMarker([lat, lng], {
         radius: 6,
         color: "red",
@@ -69,10 +60,9 @@ fetch(url)
       .addTo(map)
       .bindPopup(name);
     });
-
   })
   .catch(err => {
-    console.error("駅データ取得エラー:", err);
+    console.error("JSON読み込みエラー:", err);
   });
 </script>
 
