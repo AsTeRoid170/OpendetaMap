@@ -12,19 +12,41 @@ function searchRoute(mode) {
 
   if (routeLine) map.removeLayer(routeLine);
 
+  const modeConfig = {
+    walking: { color: 'green', emoji: '🚶', name: '徒歩', speed: 75 },     // m/min
+    cycling: { color: 'orange', emoji: '🚲', name: '自転車', speed: 266.7 }, // m/min
+    driving: { color: 'red', emoji: '🚗', name: '車', speed: 666.7 }        // m/min
+  };
+
+  const config = modeConfig[mode];
+  statusEl.textContent = `${config.name}ルートを検索中...`;
+
   const osrmUrl = `https://router.project-osrm.org/route/v1/${mode}/${currentPosition.lon},${currentPosition.lat};${nearestStation.lng},${nearestStation.lat}?geometries=geojson&overview=full`;
-  
-  fetch(osrmUrl).then(res => res.json()).then(data => {
-    if (data.routes?.[0]) {
-      const coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
-      routeLine = L.polyline(coords, {color: mode === 'walking' ? 'green' : 'red', weight: 6}).addTo(map);
-      const dist = (data.routes[0].distance/1000).toFixed(1);
-      const time = Math.round(data.routes[0].duration/60);
-      statusEl.textContent += ` | ${mode === 'walking' ? '🚶' : '🚗'}${dist}km(${time}分)`;
-      map.fitBounds(routeLine.getBounds());
-    }
-  });
+
+  fetch(osrmUrl)
+    .then(res => res.json())
+    .then(data => {
+      if (data.routes?.[0]) {
+        const coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+        routeLine = L.polyline(coords, { color: config.color, weight: 6, opacity: 0.8 }).addTo(map);
+
+        const distance = data.routes[0].distance; // m
+const timeMin = Math.round(distance / config.speed); // 分単位（距離 ÷ 分速）
+statusEl.textContent =
+  `${config.emoji}${config.name}: ${(distance / 1000).toFixed(2)} km (${timeMin}分)`;
+        map.fitBounds(routeLine.getBounds());
+      } else {
+        statusEl.textContent = `${config.name}ルートの取得に失敗しました`;
+      }
+    })
+    .catch(err => {
+      console.error('ルート検索エラー:', err);
+      statusEl.textContent = `ルート取得エラー`;
+    });
 }
+
+
+
 
 // アイコン定義
 const blueIcon = L.icon({
@@ -118,6 +140,7 @@ function updateNearestMarker(nearest) {
 // DOM読み込み完了を待ってからボタンイベント登録
 document.addEventListener('DOMContentLoaded', () => {
   const walkBtn = document.getElementById('walkBtn');
+  const bikeBtn = document.getElementById('bikeBtn');
   const driveBtn = document.getElementById('driveBtn');
   
   if (walkBtn) {
@@ -129,6 +152,15 @@ document.addEventListener('DOMContentLoaded', () => {
     console.error('walkBtnが見つかりません');
   }
   
+  if (bikeBtn) {
+    bikeBtn.addEventListener('click', () => {
+      console.log('自転車ボタンクリック！');  // デバッグ用
+      searchRoute('cycling');
+    });
+  } else {
+    console.error('bikeBtnが見つかりません');
+  }
+
   if (driveBtn) {
     driveBtn.addEventListener('click', () => {
       console.log('車ボタンクリック！');  // デバッグ用
