@@ -15,11 +15,17 @@
 </head>
 <body>
 
+  <h1>現在位置を地図に表示</h1>
+  <p id="status">位置情報を取得中です...</p>
   <!-- 地図を表示する箱 -->
   <div id="map"></div>
 
   <!-- LeafletのJS（地図の機能） -->
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
 
   <!-- 自分のJS -->
   <script src="js/main.js"></script>
