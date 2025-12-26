@@ -12,6 +12,22 @@ watchId = navigator.geolocation.watchPosition(
     if (currentMarker) map.removeLayer(currentMarker);
     currentMarker = L.marker([lat, lng]).addTo(map).bindPopup('現在位置');
 
+/*
+ // ★★★ 現在位置マーカー（クリックでスカイツリー移動） ★★★
+      if (currentMarker) map.removeLayer(currentMarker);
+      currentMarker = L.marker([lat, lng]).addTo(map)
+        .bindPopup('現在位置を追跡中<br><small>クリックで東京スカイツリーへ移動</small>')
+        .on('click', function() {
+          const skytreeLat = 35.710064;  // 東京スカイツリー
+          const skytreeLng = 139.810699;
+          
+          currentMarker.setLatLng([skytreeLat, skytreeLng]);
+          map.panTo([skytreeLat, skytreeLng], 16, { animate: true });
+          currentMarker.bindPopup('東京スカイツリー<br>押手町1-1-2<br>現在位置追跡継続中');
+        });
+
+*/
+
     // ★ ODPT:Station API（JR東日本の駅一覧）
     const url =
       'https://api-challenge.odpt.org/api/v4/odpt:Station' +
