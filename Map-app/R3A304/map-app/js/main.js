@@ -10,7 +10,7 @@ L.tileLayer(
 const API_URL =
   'https://api-challenge.odpt.org/api/v4/odpt:Station' +
   '?odpt:operator=odpt.Operator:JR-East' +
-  '&acl:consumerKey=521wabbzz3hjrfr9ctx1cz7oin50dq76pvabxsrseydzpoo4vx8sr5pvdkdvw7k8'; // ←自分のトークン
+  '&acl:consumerKey=fmig1fzk4tflkt40zz4u43z5sg3xrs53jlytlin6numuleq142eqr7ezzxkui28v'; // ←自分のトークン
 
 fetch(API_URL)
   .then(res => res.json())

@@ -1,0 +1,35 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.767125, 35.681236]
+      },
+      "properties": {
+        "name": "東京駅"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.700413, 35.689592]
+      },
+      "properties": {
+        "name": "新宿駅"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.701636, 35.658034]
+      },
+      "properties": {
+        "name": "渋谷駅"
+      }
+    }
+  ]
+}
