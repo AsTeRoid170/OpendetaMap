@@ -15,6 +15,37 @@
 </head>
 <body>
 
+  <!-- 移動手段の選択UI -->
+  <div id="transport-controls">
+    <label>
+      <input type="radio" name="mode" value="walk" checked>
+      徒歩
+    </label>
+    <label>
+      <input type="radio" name="mode" value="bike">
+      自転車
+    </label>
+    <label>
+      <input type="radio" name="mode" value="car">
+      車
+    </label>
+  </div>
+
+  <!-- ユーザー設定用速度（m/分） -->
+    <div id="speed-settings">
+      <label>徒歩(m/分):
+        <input type="number" id="speed-walk" value="80" min="10" max="500">
+      </label>
+      <label>自転車(m/分):
+        <input type="number" id="speed-bike" value="250" min="50" max="1000">
+      </label>
+      <label>車(m/分):
+        <input type="number" id="speed-car" value="800" min="100" max="3000">
+      </label>
+      <button id="apply-speed">速度を反映</button>
+    </div>
+  </div>
+
   <!-- 地図を表示する箱 -->
   <div id="map"></div>
 
