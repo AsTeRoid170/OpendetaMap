@@ -31,34 +31,47 @@ fetch(API_URL)
   .catch(err => console.error('駅データ取得エラー', err));
 
 // ====== 現在位置を取得 ======
+let currentMarker = null;   // 現在位置マーカー
+let currentCircle = null;   // 精度円（必要なければ省略可）
+
 if (!navigator.geolocation) {
   statusEl.textContent = 'このブラウザは位置情報取得に対応していません。';
 } else {
-  statusEl.textContent = '現在位置を取得しています...';
+  statusEl.textContent = '現在位置の監視を開始します...';
 
-  navigator.geolocation.getCurrentPosition(
+  navigator.geolocation.watchPosition(
     (position) => {
       const lat = position.coords.latitude;
       const lon = position.coords.longitude;
       const acc = position.coords.accuracy;
 
       statusEl.textContent =
-        `現在位置を取得しました。緯度: ${lat}, 経度: ${lon}（精度 約${Math.round(acc)}m）`;
+        `現在位置更新: 緯度 ${lat}, 経度 ${lon}（精度 約${Math.round(acc)}m）`;
 
-      // 中心を現在位置に移動
-      map.setView([lat, lon], 15);
+      // ★マップは動かさない（setViewしない）
 
-      // 現在位置をマーカーで表示
-      const marker = L.marker([lat, lon]).addTo(map);
-      marker.bindPopup('あなたの現在位置').openPopup();
+      // マーカーがまだ無ければ作成、あれば位置だけ更新
+      if (!currentMarker) {
+        currentMarker = L.marker([lat, lon]).addTo(map);
+        currentMarker.bindPopup('あなたの現在位置');
+        // 必要なら最初の1回だけポップアップを開く
+        currentMarker.openPopup();
+      } else {
+        currentMarker.setLatLng([lat, lon]);
+      }
 
-      // 精度の円
-      /**L.circle([lat, lon], {
-        radius: acc,
-        color: 'blue',
-        fillColor: '#3f51b5',
-        fillOpacity: 0.2
-      }).addTo(map);**/
+      // 精度の円も同様に再利用
+      /**if (!currentCircle) {
+        currentCircle = L.circle([lat, lon], {
+          radius: acc,
+          color: 'blue',
+          fillColor: '#3f51b5',
+          fillOpacity: 0.2
+        }).addTo(map);
+      } else {
+        currentCircle.setLatLng([lat, lon]);
+        currentCircle.setRadius(acc);
+      }*/
     },
     (error) => {
       switch (error.code) {
@@ -75,6 +88,10 @@ if (!navigator.geolocation) {
           statusEl.textContent = '不明なエラーが発生しました。';
       }
     },
-    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    }
   );
 }
