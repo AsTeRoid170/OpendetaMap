@@ -34,3 +34,90 @@ fetch(API_URL)
   .catch(err => {
     console.error('駅データ取得エラー', err);
   });
+
+
+let stationsData = [];
+
+fetch(API_URL)
+  .then(res => res.json())
+  .then(stations => {
+    stationsData = stations; // ← 保存しておく
+
+    stations.forEach(station => {
+      const lat = station['geo:lat'];
+      const lng = station['geo:long'];
+      const name = station['odpt:stationTitle']?.ja;
+
+      L.marker([lat, lng])
+        .addTo(map)
+        .bindPopup(name);
+    });
+  });
+
+
+let nearestMarker = null;
+let nearestLine = null;
+
+navigator.geolocation.watchPosition(position => {
+  const myLat = position.coords.latitude;
+  const myLng = position.coords.longitude;
+
+  let nearestStation = null;
+  let minDistance = Infinity;
+
+  stationsData.forEach(station => {
+    const lat = station['geo:lat'];
+    const lng = station['geo:long'];
+
+    const distance = calcDistance(myLat, myLng, lat, lng);
+
+    if (distance < minDistance) {
+      minDistance = distance;
+      nearestStation = station;
+    }
+  });
+
+  if (!nearestStation) return;
+
+  const stationLat = nearestStation['geo:lat'];
+  const stationLng = nearestStation['geo:long'];
+  const stationName = nearestStation['odpt:stationTitle']?.ja;
+
+  // 既存表示を消す
+  if (nearestMarker) map.removeLayer(nearestMarker);
+  if (nearestLine) map.removeLayer(nearestLine);
+
+  // 最寄り駅マーカー
+  nearestMarker = L.marker([stationLat, stationLng], {
+    icon: L.divIcon({ html: '🚉', className: '' })
+  })
+    .addTo(map)
+    .bindPopup(
+      `最寄り駅：${stationName}<br>距離：約${Math.round(minDistance)}m`
+    );
+
+  // 現在地 → 駅の線
+  nearestLine = L.polyline(
+    [[myLat, myLng], [stationLat, stationLng]],
+    { color: 'red' }
+  ).addTo(map);
+});
+
+
+
+// 緯度経度から距離（m）を計算
+function calcDistance(lat1, lng1, lat2, lng2) {
+  const R = 6371000; // 地球半径(m)
+  const toRad = deg => deg * Math.PI / 180;
+
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) *
+    Math.cos(toRad(lat2)) *
+    Math.sin(dLng / 2) ** 2;
+
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
