@@ -5,6 +5,13 @@ L.tileLayer(
   { attribution: '© OpenStreetMap contributors' }
 ).addTo(map);
 
+// 路線ID → 日本語名のマスタ
+const RAILWAY_NAME_MAP = {
+  'odpt.Railway:JR-East.Yamanote': '山手線',
+  'odpt.Railway:JR-East.Chuo': '中央線',
+  'odpt.Railway:JR-East.Sobu': '総武線',
+  // 必要に応じて追加……
+};
 
 // ===== 変数定義 =====
 let currentMarker = null;   // 現在位置マーカー
@@ -13,20 +20,65 @@ let watchId = null;         // 位置追跡ID
 let odptStations = [];      // ODPT の駅一覧キャッシュ
 
 
+// 追加: 最寄り駅計算にも使う駅マーカーリスト
+let stationMarkers = [];
+
+// 路線ごとのレイヤー
+const railwayLayers = {};  // { railwayId: L.layerGroup }
+const railwayNames  = {};  // { railwayId: '山手線' など }
+
+
 // ===== ODPT 駅データ取得 =====
 const API_URL =
   'https://api-challenge.odpt.org/api/v4/odpt:Station' +
   '?odpt:operator=odpt.Operator:JR-East' +
   '&acl:consumerKey=1ehr2tinii4eomlmzwqgxhhy70j6harphkpjl2sheg2948iqki4nzweqnhbu551a'; // ←自分のキー
-
 fetch(API_URL)
   .then(res => res.json())
   .then(stations => {
     odptStations = stations;
     console.log('駅データ取得件数:', odptStations.length);
+
+    stations.forEach(station => {
+      const lat       = station['geo:lat'] ?? station['odpt:latitude'];
+      const lng       = station['geo:long'] ?? station['odpt:longitude'];
+      const nameJa    = station['odpt:stationTitle']?.ja || station['dc:title'];
+      const railwayId = station['odpt:railway']; // 例: "odpt.Railway:JR-East.Yamanote"
+
+      if (typeof lat !== 'number' || typeof lng !== 'number' || !nameJa || !railwayId) return;
+
+      // 駅マーカー作成
+      const marker = L.marker([lat, lng]).bindPopup(nameJa);
+
+      // map に描画（常に表示したいならここで addTo）
+      marker.addTo(map);
+
+      // 最寄り駅計算用リストにも保持
+      stationMarkers.push({ marker, lat, lng, name: nameJa, station });
+
+      // 路線ごとの layerGroup にも追加
+      if (!railwayLayers[railwayId]) {
+        railwayLayers[railwayId] = L.layerGroup();
+      }
+      railwayLayers[railwayId].addLayer(marker);
+
+      // 路線名（簡易的に駅名から作っているだけなので、必要ならマスタで置き換え）
+      if (!railwayNames[railwayId]) {
+        railwayNames[railwayId] = railwayId; // とりあえずIDそのまま
+      }
+    });
+
+    // レイヤーコントロール用オーバーレイ定義
+    const overlays = {};
+    Object.keys(railwayLayers).forEach(railwayId => {
+      const label = railwayNames[railwayId];
+      overlays[label] = railwayLayers[railwayId];
+    });
+
+    // 右上にON/OFF用コントロールを追加
+    L.control.layers(null, overlays, { collapsed: false }).addTo(map);
   })
   .catch(err => console.error('駅データ取得エラー', err));
-
 
 // ===== 距離計算 [m] =====
 function distanceMeter(lat1, lon1, lat2, lon2) {
