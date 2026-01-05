@@ -8,7 +8,6 @@ L.tileLayer(
   { attribution: '© OpenStreetMap contributors' }
 ).addTo(map);
 
-
 // ==========================
 // 📍 全データ保持用変数
 // ==========================
@@ -19,13 +18,48 @@ let allStations = [];
 let nearestStationMarker = null;
 
 // 🚗 移動手段と速度設定（m/分）
-let currentMode = 'walk'; // デフォルト: 徒歩
+let currentMode = 'walk';
 const SPEED_TABLE = {
   walk: 80,   // 徒歩 約4.8km/h
   bike: 250,  // 自転車 約15km/h
   car: 800    // 車 約48km/h
 };
 
+// ==========================
+// 📅 JR東日本の時刻表データ
+// ==========================
+const TRAIN_TIMETABLE_URL =
+  'https://api-challenge.odpt.org/api/v4/odpt:TrainTimetable' +
+  '?odpt:operator=odpt.Operator:JR-East' +
+  '&acl:consumerKey=521wabbzz3hjrfr9ctx1cz7oin50dq76pvabxsrseydzpoo4vx8sr5pvdkdvw7k8';
+
+let trainTimetableByRailway = {};
+
+// 駅から路線IDを抽出
+function getRailwayId(station) {
+  const raw = station['odpt:railway'];
+  if (!raw) return null;
+  return raw.split(':')[1];
+}
+
+// 時刻表データを取得
+async function fetchTrainTimetable() {
+  try {
+    const res = await fetch(TRAIN_TIMETABLE_URL);
+    const timetables = await res.json();
+    
+    trainTimetableByRailway = {};
+    timetables.forEach(tt => {
+      const railway = tt['odpt:railway'];
+      if (!railway) return;
+      const key = railway.split(':')[1];
+      trainTimetableByRailway[key] = tt;
+    });
+    console.log('📅 時刻表データ取得完了:', Object.keys(trainTimetableByRailway).length, '路線分');
+  } catch (err) {
+    console.error('時刻表取得エラー', err);
+  }
+}
 
 // ==========================
 // 🧭 移動手段モード変更＋速度設定反映
@@ -33,49 +67,40 @@ const SPEED_TABLE = {
 document.querySelectorAll('input[name="mode"]').forEach((input) => {
   input.addEventListener('change', (e) => {
     currentMode = e.target.value;
-
-    // 現在の入力欄の値を SPEED_TABLE に反映
     updateSpeedTableFromInputs();
-
-    // 最寄り駅が取得済みなら、再計算してポップアップ更新
     if (currentLocation && allStations.length > 0) {
       findAndHighlightNearestStation();
     }
   });
 });
 
-
 // ==========================
-// 🚀 「速度設定フォーム」のボタンイベント
+// 🚀 速度設定フォームのボタンイベント
 // ==========================
 const applySpeedButton = document.getElementById('apply-speed');
 if (applySpeedButton) {
   applySpeedButton.addEventListener('click', () => {
     updateSpeedTableFromInputs();
-
     if (currentLocation && allStations.length > 0) {
       findAndHighlightNearestStation();
     }
   });
 }
 
-
 // ==========================
-// ⚙️ 入力フォームから速度テーブル更新関数
+// ⚙️ 入力フォームから速度テーブル更新
 // ==========================
 function updateSpeedTableFromInputs() {
   const walk = Number(document.getElementById('speed-walk')?.value);
   const bike = Number(document.getElementById('speed-bike')?.value);
-  const car  = Number(document.getElementById('speed-car')?.value);
+  const car = Number(document.getElementById('speed-car')?.value);
 
   if (walk > 0) SPEED_TABLE.walk = walk;
   if (bike > 0) SPEED_TABLE.bike = bike;
-  if (car  > 0) SPEED_TABLE.car  = car;
+  if (car > 0) SPEED_TABLE.car = car;
 
   console.log("🚀 現在の速度設定:", SPEED_TABLE);
 }
-
-
 
 // ==========================
 // 📍 現在地をリアルタイムで追跡
@@ -107,7 +132,6 @@ if ("geolocation" in navigator) {
         currentCircle.setRadius(accuracy);
       }
 
-      // ✅ 最寄り駅を計算
       if (allStations.length > 0) {
         findAndHighlightNearestStation();
       }
@@ -115,7 +139,6 @@ if ("geolocation" in navigator) {
     (err) => {
       console.error("位置情報エラー", err);
       alert("現在地を取得できませんでした。");
-      // 位置取得できない場合のフォールバック
       map.setView([35.681236, 139.767125], 13);
     },
     {
@@ -126,18 +149,26 @@ if ("geolocation" in navigator) {
   );
 }
 
-
 // ==========================
-// 🚉 駅データ取得 + マーカー表示
+// 🚉 駅データ + 時刻表データを同時取得
 // ==========================
-const API_URL =
+const STATION_API_URL =
   'https://api-challenge.odpt.org/api/v4/odpt:Station' +
   '?odpt:operator=odpt.Operator:JR-East' +
   '&acl:consumerKey=521wabbzz3hjrfr9ctx1cz7oin50dq76pvabxsrseydzpoo4vx8sr5pvdkdvw7k8';
 
-fetch(API_URL)
-  .then((res) => res.json())
-  .then((stations) => {
+async function initData() {
+  try {
+    // 駅データと時刻表データを同時取得
+    const [stationsRes, timetableRes] = await Promise.all([
+      fetch(STATION_API_URL),
+      fetch(TRAIN_TIMETABLE_URL)
+    ]);
+
+    const stations = await stationsRes.json();
+    const timetables = await timetableRes.json();
+
+    // 駅データをフィルタリング
     allStations = stations.filter(station => {
       const lat = station["geo:lat"];
       const lng = station["geo:long"];
@@ -145,24 +176,49 @@ fetch(API_URL)
       return lat && lng && name;
     });
 
+    // 時刻表データを路線IDでマッピング
+    timetables.forEach(tt => {
+      const railway = tt['odpt:railway'];
+      if (!railway) return;
+      const key = railway.split(':')[1];
+      trainTimetableByRailway[key] = tt;
+    });
+
+    console.log('📅 時刻表データ取得完了:', Object.keys(trainTimetableByRailway).length, '路線分');
+
+    // 駅マーカーを描画（時刻表情報付き）
     allStations.forEach((station) => {
+      const railwayId = getRailwayId(station);
+      const timetable = railwayId ? trainTimetableByRailway[railwayId] : null;
+
+      let timetableText = '時刻表なし';
+      if (timetable) {
+        timetableText = timetable['dc:title']?.ja || 
+                       timetable['owl:sameAs'] || 
+                       '時刻表取得済み';
+      }
+
       L.marker([station["geo:lat"], station["geo:long"]])
         .addTo(map)
         .bindPopup(`
           <b>${station["odpt:stationTitle"]?.ja}</b><br>
-          路線: ${station["odpt:railway"]?.split(':')[1] || "不明"}<br>
+          路線: ${railwayId || "不明"}<br>
+          📅 ${timetableText}<br>
           駅ID: ${station["@id"]}
         `);
     });
 
+    // 現在地があれば最寄り駅を計算
     if (currentLocation) {
       findAndHighlightNearestStation();
     }
-  })
-  .catch((err) => {
-    console.error("駅データ取得エラー", err);
-  });
+  } catch (err) {
+    console.error("データ取得エラー", err);
+  }
+}
 
+// 初期化実行
+initData();
 
 // ==========================
 // 🎯 最寄り駅の計算
@@ -191,7 +247,6 @@ function findAndHighlightNearestStation() {
   highlightNearestStation(nearestStation, minDistance);
 }
 
-
 // ==========================
 // 📏 2点間の距離計算（km）
 // ==========================
@@ -206,7 +261,6 @@ function getDistanceKm(lat1, lng1, lat2, lng2) {
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   return R * c;
 }
-
 
 // ==========================
 // 🚶‍♀️ 所要時間を計算＆整形
@@ -226,14 +280,20 @@ function getTravelTimeText(distanceKm, mode) {
   }
 }
 
-
 // ==========================
-// ⭐ 最寄り駅強調表示
+// ⭐ 最寄り駅強調表示（時刻表情報付き）
 // ==========================
 function highlightNearestStation(station, distanceKm) {
   const lat = station["geo:lat"];
   const lng = station["geo:long"];
   const name = station["odpt:stationTitle"]?.ja;
+  const railwayId = getRailwayId(station);
+  const timetable = railwayId ? trainTimetableByRailway[railwayId] : null;
+
+  let timetableText = '時刻表なし';
+  if (timetable) {
+    timetableText = timetable['dc:title']?.ja || '時刻表取得済み';
+  }
 
   if (nearestStationMarker) {
     map.removeLayer(nearestStationMarker);
@@ -256,6 +316,8 @@ function highlightNearestStation(station, distanceKm) {
   .bindPopup(`
     <b>🎯 最寄り駅</b><br>
     ${name}<br>
+    路線: ${railwayId || '不明'}<br>
+    📅 ${timetableText}<br>
     📏 距離: ${distanceKm.toFixed(2)} km<br>
     🚙 手段: ${modeLabel}<br>
     ⏱ 所要時間: ${travelTime}

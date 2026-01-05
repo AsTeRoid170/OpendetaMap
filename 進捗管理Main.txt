@@ -28,7 +28,8 @@ HTML、CSS、JavaScript
 2026/01/05にやること
 ・駅の路線の切り替え
 ・電車の位置のＲＴ反映
-
+自分たちが使っているオープンデータ⇒ＪＲ 東日本
+https://ckan.odpt.org/dataset/?license_id=odpt-ptodcll&organization=jreast
 
 
 
