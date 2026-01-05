@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>駅マップ</title>
 
-  <!-- LeafletのCSS（地図の見た目） -->
+  <!-- Leaflet CSS -->
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet/dist/leaflet.css"
@@ -16,16 +16,13 @@
 <body>
 
   <button id="routeToggle">ルート表示：ON</button>
+  <div id="walkTime">🚶 徒歩時間：--</div>
 
-
-  <!-- 地図を表示する箱 -->
   <div id="map"></div>
 
-  <!-- LeafletのJS（地図の機能） -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-  <!-- 自分のJS -->
   <script src="js/route.js"></script>
   <script src="js/main.js"></script>
+
 </body>
 </html>
