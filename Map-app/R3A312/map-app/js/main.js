@@ -1,3 +1,14 @@
+let isRouteEnabled = true;
+let currentLat = null;
+let currentLng = null;
+
+// ===== 徒歩ルート用 =====
+let routeLine = null;
+let routePopup = null;
+
+const routeToggleBtn = document.getElementById('routeToggle');
+
+
 // 地図表示
 const map = L.map('map').setView([35.681236, 139.767125], 11);
 
@@ -5,6 +16,7 @@ L.tileLayer(
   'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
   { attribution: '© OpenStreetMap contributors' }
 ).addTo(map);
+
 
 // ====== ここから駅API ======
 const API_URL =
@@ -15,15 +27,15 @@ const API_URL =
 fetch(API_URL)
   .then(res => res.json())
   .then(stations => {
+
+    // ★ これを追加（超重要）
+    stationsData = stations;
+
     stations.forEach(station => {
-      // 緯度・経度（ODPTの形式）
       const lat = station['geo:lat'];
       const lng = station['geo:long'];
-
-      // 駅名（日本語）
       const name = station['odpt:stationTitle']?.ja;
 
-      // 念のためチェック
       if (!lat || !lng || !name) return;
 
       L.marker([lat, lng])
@@ -36,23 +48,10 @@ fetch(API_URL)
   });
 
 
+
 let stationsData = [];
 
-fetch(API_URL)
-  .then(res => res.json())
-  .then(stations => {
-    stationsData = stations; // ← 保存しておく
 
-    stations.forEach(station => {
-      const lat = station['geo:lat'];
-      const lng = station['geo:long'];
-      const name = station['odpt:stationTitle']?.ja;
-
-      L.marker([lat, lng])
-        .addTo(map)
-        .bindPopup(name);
-    });
-  });
 
 
 let nearestMarker = null;
@@ -61,6 +60,9 @@ let nearestLine = null;
 navigator.geolocation.watchPosition(position => {
   const myLat = position.coords.latitude;
   const myLng = position.coords.longitude;
+
+  currentLat = myLat;
+  currentLng = myLng;
 
   let nearestStation = null;
   let minDistance = Infinity;
@@ -101,7 +103,16 @@ navigator.geolocation.watchPosition(position => {
     [[myLat, myLng], [stationLat, stationLng]],
     { color: 'red' }
   ).addTo(map);
+
+  drawWalkingRoute(
+  myLat,
+  myLng,
+  stationLat,
+  stationLng
+);
 });
+
+
 
 
 
@@ -120,4 +131,67 @@ function calcDistance(lat1, lng1, lat2, lng2) {
     Math.sin(dLng / 2) ** 2;
 
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function drawWalkingRoute(startLat, startLng, endLat, endLng) {
+
+  if (!isRouteEnabled) return;
+  if (
+    typeof startLat !== 'number' ||
+    typeof startLng !== 'number' ||
+    typeof endLat !== 'number' ||
+    typeof endLng !== 'number'
+  ) return;
+
+  const url =
+    `https://router.project-osrm.org/route/v1/foot/` +
+    `${startLng},${startLat};${endLng},${endLat}` +
+    `?overview=full&geometries=geojson`;
+
+  fetch(url)
+    .then(res => res.json())
+    .then(data => {
+      if (!data.routes || data.routes.length === 0) return;
+
+      const route = data.routes[0];
+      const coords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+      const durationMin = Math.round(route.duration / 60);
+
+      clearRoute();
+
+      routeLine = L.polyline(coords, {
+        color: 'blue',
+        weight: 5
+      }).addTo(map);
+
+      routePopup = L.popup()
+        .setLatLng(coords[Math.floor(coords.length / 2)])
+        .setContent(`🚶 徒歩 約${durationMin}分`)
+        .openOn(map);
+    });
+}
+
+
+
+
+routeToggleBtn.addEventListener('click', () => {
+  isRouteEnabled = !isRouteEnabled;
+
+  routeToggleBtn.textContent =
+    isRouteEnabled ? 'ルート表示：ON' : 'ルート表示：OFF';
+
+  if (!isRouteEnabled) {
+    clearRoute();
+  }
+});
+
+function clearRoute() {
+  if (routeLine) {
+    map.removeLayer(routeLine);
+    routeLine = null;
+  }
+  if (routePopup) {
+    map.removeLayer(routePopup);
+    routePopup = null;
+  }
 }
