@@ -7,11 +7,49 @@ L.tileLayer(
 
 // 路線ID → 日本語名のマスタ
 const RAILWAY_NAME_MAP = {
-  'odpt.Railway:JR-East.Yamanote': '山手線',
-  'odpt.Railway:JR-East.Chuo': '中央線',
-  'odpt.Railway:JR-East.Sobu': '総武線',
-  // 必要に応じて追加……
+  "odpt.Railway:JR-East.Agatsuma": "吾妻線",
+  "odpt.Railway:JR-East.ChuoRapid": "中央線（快速）",
+  "odpt.Railway:JR-East.Joetsu": "上越線",
+  "odpt.Railway:JR-East.ChuoSobuLocal": "中央・総武線（各駅停車）",
+  "odpt.Railway:JR-East.Itsukaichi": "五日市線",
+  "odpt.Railway:JR-East.Hachiko": "八高線",
+  "odpt.Railway:JR-East.Ito": "伊東線",
+  "odpt.Railway:JR-East.Joban": "常磐線",
+  "odpt.Railway:JR-East.JobanLocal": "常磐線（各駅停車）",
+  "odpt.Railway:JR-East.JobanRapid": "常磐快速線",
+  "odpt.Railway:JR-East.Kashima": "鹿島線",
+  "odpt.Railway:JR-East.Kawagoe": "川越線",
+  "odpt.Railway:JR-East.KeihinTohokuNegishi": "京浜東北・根岸線",
+  "odpt.Railway:JR-East.Kururi": "久留里線",
+  "odpt.Railway:JR-East.Keiyo": "京葉線",
+  "odpt.Railway:JR-East.Musashino": "武蔵野線",
+  "odpt.Railway:JR-East.Nambu": "南武線",
+  "odpt.Railway:JR-East.NambuBranch": "南武線（支線）",
+  "odpt.Railway:JR-East.Narita": "成田線",
+  "odpt.Railway:JR-East.NaritaAbikoBranch": "成田線（我孫子支線）",
+  "odpt.Railway:JR-East.NaritaAirportBranch": "成田線（空港支線）",
+  "odpt.Railway:JR-East.Ome": "青梅線",
+  "odpt.Railway:JR-East.Sagami": "相模線",
+  "odpt.Railway:JR-East.Tsurumi": "鶴見線",
+  "odpt.Railway:JR-East.SaikyoKawagoe": "埼京線・川越線",
+  "odpt.Railway:JR-East.ShonanShinjuku": "湘南新宿ライン",
+  "odpt.Railway:JR-East.SobuRapid": "総武快速線",
+  "odpt.Railway:JR-East.SotetsuDirect": "相鉄直通線",
+  "odpt.Railway:JR-East.Sotobo": "外房線",
+  "odpt.Railway:JR-East.Takasaki": "高崎線",
+  "odpt.Railway:JR-East.Togane": "東金線",
+  "odpt.Railway:JR-East.Tokaido": "東海道線",
+  "odpt.Railway:JR-East.TsurumiOkawaBranch": "鶴見線（大川支線）",
+  "odpt.Railway:JR-East.TsurumiUmiShibauraBranch": "鶴見線（海芝浦支線）",
+  "odpt.Railway:JR-East.Uchibo": "内房線",
+  "odpt.Railway:JR-East.Utsunomiya": "宇都宮線",
+  "odpt.Railway:JR-East.Yamanote": "山手線",
+  "odpt.Railway:JR-East.Yokohama": "横浜線",
+  "odpt.Railway:JR-East.Chuo": "中央線",
+  "odpt.Railway:JR-East.Sobu": "総武線",
+  "odpt.Railway:JR-East.Yokosuka": "横須賀線"
 };
+
 
 // ===== 変数定義 =====
 let currentMarker = null;   // 現在位置マーカー
@@ -64,7 +102,7 @@ fetch(API_URL)
 
       // 路線名（簡易的に駅名から作っているだけなので、必要ならマスタで置き換え）
       if (!railwayNames[railwayId]) {
-        railwayNames[railwayId] = railwayId; // とりあえずIDそのまま
+        railwayNames[railwayId] = RAILWAY_NAME_MAP[railwayId] ?? railwayId; // とりあえずIDそのまま
       }
     });
 
@@ -80,8 +118,45 @@ fetch(API_URL)
 
     // 右上にON/OFF用コントロールを追加
     L.control.layers(null, overlays, { collapsed: false }).addTo(map);
+    // レイヤーコントロール追加後にボタンを作成
+const controlContainer = document.querySelector('.leaflet-control-layers');
+
+// ボタンを包む div
+const btnBox = document.createElement('div');
+btnBox.style.marginTop = '10px';
+
+// 全て選択ボタン
+const btnSelectAll = document.createElement('button');
+btnSelectAll.textContent = '全て選択';
+btnSelectAll.style.display = 'block';
+btnSelectAll.style.width = '100%';
+btnSelectAll.style.marginBottom = '5px';
+btnSelectAll.onclick = () => {
+  Object.keys(railwayLayers).forEach(id => {
+    map.addLayer(railwayLayers[id]);
+  });
+};
+
+// 全て解除ボタン
+const btnClearAll = document.createElement('button');
+btnClearAll.textContent = '全て解除';
+btnClearAll.style.display = 'block';
+btnClearAll.style.width = '100%';
+btnClearAll.onclick = () => {
+  Object.keys(railwayLayers).forEach(id => {
+    map.removeLayer(railwayLayers[id]);
+  });
+};
+
+// ボタンをコントロール内に追加
+btnBox.appendChild(btnSelectAll);
+btnBox.appendChild(btnClearAll);
+controlContainer.appendChild(btnBox);
+
   })
   .catch(err => console.error('駅データ取得エラー', err));
+
+
 
 // ===== 距離計算 [m] =====
 function distanceMeter(lat1, lon1, lat2, lon2) {
