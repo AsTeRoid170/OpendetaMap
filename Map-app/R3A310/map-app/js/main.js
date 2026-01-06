@@ -50,6 +50,7 @@ const RAILWAY_NAME_MAP = {
   "odpt.Railway:JR-East.Yokosuka": "横須賀線"
 };
 
+// 路線ID → 色分け
 const RAILWAY_COLOR_MAP = {
   "odpt.Railway:JR-East.Agatsuma": "#8f76d6",        // 吾妻線（紫系）
   "odpt.Railway:JR-East.ChuoRapid": "#ff4500",      // 中央線快速（オレンジ）
