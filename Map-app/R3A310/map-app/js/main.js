@@ -73,6 +73,9 @@ fetch(API_URL)
     Object.keys(railwayLayers).forEach(railwayId => {
       const label = railwayNames[railwayId];
       overlays[label] = railwayLayers[railwayId];
+
+      // ★ 初期状態でチェック済みにするために追加 
+      railwayLayers[railwayId].addTo(map);
     });
 
     // 右上にON/OFF用コントロールを追加
