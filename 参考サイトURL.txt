@@ -1,0 +1,5 @@
+https://qiita.com/masakinihirota/items/7ee5c2aa405c2b37d1c5
+typescriptの使い方
+
+https://zenn.dev/sdb_blog/articles/14c61fcdb54e
+GTFS-RTの使い方
